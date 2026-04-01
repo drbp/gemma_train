@@ -1,20 +1,21 @@
+
 import json
 from pathlib import Path
-from miditok import REMIPlus
+from miditok import REMI
 from tqdm import tqdm
 from multiprocessing import Pool
 
 # 1. Load your specialized Rock Tokenizer
-tokenizer = REMIPlus.from_json("rock_midi_tokenizer.json")
+tokenizer = REMI(params="rock_midi_tokenizer.json")
 
 def process_one_file(midi_path):
     """Converts a single MIDI file into a string of BPE tokens."""
     try:
-        # Convert MIDI to BPE IDs
-        tokens = tokenizer.tokenize(midi_path)
-        # Convert IDs to the 'Byte Strings' Gemma will read
-        # Using list comprehension for speed
-        token_str = " ".join([tokenizer.vocab[t] for t in tokens])
+        # Convert MIDI to BPE tokens
+        tok_seqs = tokenizer.midi_to_tokens(midi_path)
+        # Convert token strings to space-separated sequence
+        # tok_seqs[0] is the single stream (one_token_stream_for_programs=True)
+        token_str = " ".join(tok_seqs[0].tokens)
         
         # Add the BOS/EOS markers for the model
         return {"text": f"<bos> {token_str} <eos>"}
